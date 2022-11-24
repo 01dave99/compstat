@@ -1,0 +1,18 @@
+---
+title: "Computational Statistics-Report"
+author: "David Niederkofler, Erlend Lokna"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+mydata<-read.table("Report2_Dataset.txt", header=FALSE)
+```
+
+
