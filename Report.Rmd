@@ -17,8 +17,33 @@ mydata<-read.table("Report2_Dataset.txt", header=FALSE)
 \section{Statistical Analysis of Covariates}
 
 \subsection{1. Sex}
-
+```{r, include=FALSE}
+mydata$V6<-as.numeric(mydata$V6)
+```
+The sex of the patients is encoded in a binary variable, where $0$ means \emph{male} and $1$ means \emph{female}.
 \subsubsection{1.1 Model selection}
-
+We assume a Bernoulli model $Ber(\theta)$ for the sex of the patient conditional on one parameter $\theta$, the probability of the patient to be female. The density function is given by
+\begin{equation}
+f(x|\theta)=\theta^x(1-\theta)^{1-x},
+\end{equation}
+where $x \in \{0,1\}$. As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=2$ to give more weight to the middle of the interval $[0,1]$, knowing how females and males are represented in the general population.
 \subsubsection{1.2 Results}
+From the given dataset we get the sample size $n$ and the sum of the observations $s$:
+```{r}
+n<-length(mydata$V6[!is.na(mydata$V6)])
+s<-sum(mydata$V6)
+n
+s
+```
+Therefore the posterior distribution is $Beta(2+s,2+n-s)$, which turns out to be $Beta(278,38)$.
+From that we get
+```{r, echo=FALSE}
+mean<-(2+s)/(4+n)
+mode<-(1+s)/(2+n)
+cil<-qbeta(0.05/2,278,38)
+ciu<-qbeta(1-0.05/2,278,38)
+cat("Posterior mean: ",mean)
+cat("Posterior mode: ",mode)
+cat("Posterior 95% Confidence Interval: [",cil,",",ciu,"]")
+```
 
