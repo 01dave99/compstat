@@ -14,5 +14,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 mydata<-read.table("Report2_Dataset.txt", header=FALSE)
 ```
+\section{Statistical Analysis of Covariates}
 
+\subsection{1. Sex}
+
+\subsubsection{1.1 Model selection}
+
+\subsubsection{1.2 Results}
 
