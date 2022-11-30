@@ -13,10 +13,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 mydata<-read.table("Report2_Dataset.txt", header=FALSE)
+
 ```
 \section{Statistical Analysis of Covariates}
 
-\subsection{1. Sex}
+It is important to mention the use of notation before we proceed. We will in this section use the notation $\mathbf{x} = \{x_1, x_2, \cdots, x_n\}$ as our covariate vector.
+
+
+\subsection{Bernoulli - Beta, Ascicles}
+
+Since the Ascicles - covariate has a 0-1 outcome we can assume that it is Bernoulli distributed with parameter $\theta$. A natural conjugate prior for the Bernoulli distribution is the Beta distribution. Therefor we have the following initial information:
+$$f(x_i|\theta) = \theta^{x_i}(1-\theta)^{1-x_i}$$
+$$L(\mathbf{x} | \theta) = \theta^{\sum_{i=1}^n x_ i}(1- \theta)^{n - \sum_{i=1}^n x_i } $$
+$$h(\theta) = Beta(a, b)$$
+We proceed by calculating the posterior distribution for $\theta$
+$$h(\theta | \mathbf{x}) \propto L(\mathbf{x} | \theta) h(\theta) = \theta^{\sum_{i=1}^n x_ i}(1- \theta)^{n - \sum_{i=1}^n x_i } \frac{1}{B(a, b)} \theta^{a-1}(1-\theta)^{b-1} I(0 < \theta < 1)$$
+$$\propto Beta(\theta | a + \sum_{i = 1}^nx_i, b + n- \sum_{i + 1}^n x_i) $$
 
 \subsubsection{1.1 Model selection}
 
