@@ -7,6 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(HDInterval)
 ```
 
 
@@ -61,4 +62,8 @@ cat("Posterior mean: ",mean)
 cat("Posterior mode: ",mode)
 cat("Posterior 95% Confidence Interval: [",cil,",",ciu,"]")
 ```
-
+And the HPD confidence Interval calculates to:
+```{r}
+tst<-rbeta(1e5,278,38)
+hdi(tst)
+```
