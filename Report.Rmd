@@ -141,3 +141,10 @@ And the HPD confidence interval calculates to:
 tst<-rbeta(1e5,161,153)
 hdi(tst)
 ```
+\subsection{4. Histologic stage}
+The Histologic stage of the disease is a number in $\{1,2,3,4\}$, where the stage increases with severeness. We will give here the frequencies of the stages in the dataset.
+```{r, echo=FALSE}
+mydata$V20<- factor(mydata$V20,levels=c(1,2,3,4),labels=c("1","2","3","4"))
+summary(mydata$V20)
+```
+We see that, most patients have been diagnosed in the last to stages of the disease.
