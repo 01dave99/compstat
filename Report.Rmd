@@ -32,6 +32,8 @@ $$\propto Beta(\theta | a + \sum_{i = 1}^nx_i, b + n- \sum_{i + 1}^n x_i) $$
 \subsubsection{1.1 Model selection}
 
 \subsubsection{1.2 Results}
+
+
 \subsection{1. Sex}
 ```{r, include=FALSE}
 mydata$V6<-as.numeric(mydata$V6)
@@ -42,7 +44,11 @@ We assume a Bernoulli model $Ber(\theta)$ for the sex of the patient conditional
 \begin{equation}
 f(x|\theta)=\theta^x(1-\theta)^{1-x},
 \end{equation}
-where $x \in \{0,1\}$. As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=2$ to give more weight to the middle of the interval $[0,1]$, knowing how females and males are represented in the general population.
+where $x \in \{0,1\}$. As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=2$ to give more weight to the middle of the interval $[0,1]$, knowing how females and males are represented in the general population. The density is given by
+\begin{equation}
+h(\theta)=\frac{\Gamma(a+b)}{\Gamma(a) \Gamma(b)} \theta^{a-1} (1-\theta)^{b-1},
+\end{equation}
+for $\theta \in [0,1].$
 \subsubsection{1.2 Results}
 From the given dataset we get the sample size $n$ and the sum of the observations $s$:
 ```{r}
@@ -60,10 +66,78 @@ cil<-qbeta(0.05/2,278,38)
 ciu<-qbeta(1-0.05/2,278,38)
 cat("Posterior mean: ",mean)
 cat("Posterior mode: ",mode)
-cat("Posterior 95% Confidence Interval: [",cil,",",ciu,"]")
+cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
 ```
 And the HPD confidence Interval calculates to:
 ```{r}
 tst<-rbeta(1e5,278,38)
+hdi(tst)
+```
+\subsection{2. Spiders}
+```{r, include=FALSE}
+mydata$V9<-as.numeric(mydata$V9)
+```
+The presence of spiders is encoded in a Binary variable, where $1$ means spiders are present.
+
+\subsubsection{1.1 Model selection}
+We assume a Bernoulli model $Ber(\theta)$ for the presence of spiders in patients conditional on one parameter $\theta$, the probability of the presence of spiders in the patient. The density function is given as stated earlier.
+As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=1$, because we have no prior information. The density is given as above.
+
+\subsubsection{1.2 Results}
+From the given dataset we get the sample size $n$ and the sum of the observations $s$:
+```{r}
+n<-length(mydata$V9[!is.na(mydata$V9)])
+s<-sum(mydata$V9)
+n
+s
+```
+Therefore the posterior distribution is $Beta(1+s,1+n-s)$, which turns out to be $Beta(91,223)$.
+From that we get
+```{r, echo=FALSE}
+mean<-(2+s)/(4+n)
+mode<-(1+s)/(2+n)
+cil<-qbeta(0.05/2,91,223)
+ciu<-qbeta(1-0.05/2,91,223)
+cat("Posterior mean: ",mean)
+cat("Posterior mode: ",mode)
+cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
+```
+And the HPD confidence interval calculates to:
+```{r}
+tst<-rbeta(1e5,91,223)
+hdi(tst)
+```
+\subsection{3. Hepatomegaly}
+```{r, include=FALSE}
+mydata$V8<-as.numeric(mydata$V8)
+```
+The presence of hepatomegaly is encoded in a Binary variable, where $1$ means hepatomegaly is present.
+
+\subsubsection{1.1 Model selection}
+We assume a Bernoulli model $Ber(\theta)$ for the presence of hepatomegaly in the patient, conditional on one parameter $\theta$, the probability of the presence of hepatomegaly in the patient. The density function is given as stated earlier.
+As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=1$, because we have no prior information. The density is given as above.
+
+\subsubsection{1.2 Results}
+From the given dataset we get the sample size $n$ and the sum of the observations $s$:
+```{r}
+n<-length(mydata$V8[!is.na(mydata$V8)])
+s<-sum(mydata$V8)
+n
+s
+```
+Therefore the posterior distribution is $Beta(1+s,1+n-s)$, which turns out to be $Beta(161,153)$.
+From that we get
+```{r, echo=FALSE}
+mean<-(2+s)/(4+n)
+mode<-(1+s)/(2+n)
+cil<-qbeta(0.05/2,161,153)
+ciu<-qbeta(1-0.05/2,161,153)
+cat("Posterior mean: ",mean)
+cat("Posterior mode: ",mode)
+cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
+```
+And the HPD confidence interval calculates to:
+```{r}
+tst<-rbeta(1e5,161,153)
 hdi(tst)
 ```
