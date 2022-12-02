@@ -46,7 +46,7 @@ With the following HPD interval:
 hdi(rbeta(1e5, 1+s, 1 + n - s))
 ```
 
-```
+
 
 
 \subsection{1. Sex}
