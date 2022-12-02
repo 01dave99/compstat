@@ -1,0 +1,65 @@
+---
+title: "Erlend stuff"
+author: "erlend"
+date: "2022-12-02"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(HDInterval)
+```
+
+
+```{r}
+mydata<-read.table("Report2_Dataset.txt", header=FALSE)
+```
+
+\subsection{Ascicles}
+```{r, include=FALSE}
+mydata$V7<-as.numeric(mydata$V7)
+```
+
+
+\subsubsection{Model selection}
+Since the Ascicles - covariate has a 0-1 outcome we can assume that it is Bernoulli distributed with parameter $\theta$. A natural conjugate prior for the Bernoulli distribution is the Beta distribution. The posterior beta distribution for the parameter is given by
+$$Beta(\theta | a + \sum_{i = 1}^nx_i, b + n- \sum_{i + 1}^n x_i)$$
+\subsubsection{ Results}
+Since we don't have much prior information we proceed with a uniform distribution as a prior, $Beta(1, 1)$. From the data we found 
+$\sum_{i=1}^{312} x_i = 24$, giving us the posterior distribution $\theta|x \sim  Beta(25, 289)$. From this distribution the following was found for the parameter:
+
+```{r, echo=FALSE}
+n<-length(mydata$V6[!is.na(mydata$V7)])
+s<-sum(mydata$V7)
+mean<-(2+s)/(4+n)
+mode<-(1+s)/(2+n)
+cil<-qbeta(0.05/2, 1+s, 1 + n - s)
+ciu<-qbeta(1-0.05/2,1+s, 1 + n - s)
+cat("Posterior mean: ",mean)
+cat("Posterior mode: ",mode)
+cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
+```
+
+With the following HPD interval:
+
+```{r, echo = FALSE}
+hdi(rbeta(1e5, 1+s, 1 + n - s))
+``` 
+
+\subsection{Age}
+
+We proceed by assuming the age of the patient is poisson distributed
+
+\subsubsection{Model selection}
+
+A natural prior for the poisson distribution parameter is the gamma distribution, gamma$(\alpha, \beta)$
+The posterior distribution is given by $$gamma(\sum_{i=1}^n x_i + \alpha, n+\beta)$$ as derived in the appendix. 
+
+\subsubsection{Results}
+
+$$
+
+```{r}
+n
+```
+

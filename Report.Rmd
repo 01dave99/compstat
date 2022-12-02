@@ -19,19 +19,34 @@ mydata<-read.table("Report2_Dataset.txt", header=FALSE)
 It is important to mention the use of notation before we proceed. We will in this section use the notation $\mathbf{x} = \{x_1, x_2, \cdots, x_n\}$ as our covariate vector.
 
 
-\subsection{Bernoulli - Beta, Ascicles}
+\subsection{Ascicles}
+```{r, include=FALSE}
+mydata$V7<-as.numeric(mydata$V7)
+```
 
-Since the Ascicles - covariate has a 0-1 outcome we can assume that it is Bernoulli distributed with parameter $\theta$. A natural conjugate prior for the Bernoulli distribution is the Beta distribution. Therefore we have the following initial information:
-$$f(x_i|\theta) = \theta^{x_i}(1-\theta)^{1-x_i}$$
-$$L(\mathbf{x} | \theta) = \theta^{\sum_{i=1}^n x_ i}(1- \theta)^{n - \sum_{i=1}^n x_i } $$
-$$h(\theta) = Beta(a, b)$$
-We proceed by calculating the posterior distribution for $\theta$
-$$h(\theta | \mathbf{x}) \propto L(\mathbf{x} | \theta) h(\theta) = \theta^{\sum_{i=1}^n x_ i}(1- \theta)^{n - \sum_{i=1}^n x_i } \frac{1}{B(a, b)} \theta^{a-1}(1-\theta)^{b-1} I(0 < \theta < 1)$$
-$$\propto Beta(\theta | a + \sum_{i = 1}^nx_i, b + n- \sum_{i + 1}^n x_i) $$
 
 \subsubsection{1.1 Model selection}
-
+Since the Ascicles - covariate has a 0-1 outcome we can assume that it is Bernoulli distributed with parameter $\theta$. A natural conjugate prior for the Bernoulli distribution is the Beta distribution. The posterior beta distribution for the parameter is given by
+$$Beta(\theta | a + \sum_{i = 1}^nx_i, b + n- \sum_{i + 1}^n x_i)$$
 \subsubsection{1.2 Results}
+The following results where found using the posterior beta distribution with a=1 and b=1 (Uniform distributed) for the ascicles data:
+```{r, echo=FALSE}
+n<-length(mydata$V6[!is.na(mydata$V7)])
+s<-sum(mydata$V7)
+mean<-(2+s)/(4+n)
+mode<-(1+s)/(2+n)
+cil<-qbeta(0.05/2, 1+s, 1 + n - s)
+ciu<-qbeta(1-0.05/2,1+s, 1 + n - s)
+cat("Posterior mean: ",mean)
+cat("Posterior mode: ",mode)
+cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
+```
+With the following HPD interval:
+```{r, echo = FALSE}
+hdi(rbeta(1e5, 1+s, 1 + n - s))
+```
+
+```
 
 
 \subsection{1. Sex}
@@ -148,3 +163,32 @@ mydata$V20<- factor(mydata$V20,levels=c(1,2,3,4),labels=c("1","2","3","4"))
 summary(mydata$V20)
 ```
 We see that, most patients have been diagnosed in the last to stages of the disease.
+
+
+
+
+
+
+
+# Appendix
+## Bernoulli/Beta
+A natural conjugate prior for the Bernoulli distribution is the Beta distribution. 
+$$f(x_i|\theta) = \theta^{x_i}(1-\theta)^{1-x_i}$$
+$$L(\mathbf{x} | \theta) = \theta^{\sum_{i=1}^n x_ i}(1- \theta)^{n - \sum_{i=1}^n x_i } $$
+$$h(\theta) = Beta(a, b)$$
+We proceed by calculating the posterior distribution for $\theta$
+$$h(\theta | \mathbf{x}) \propto L(\mathbf{x} | \theta) h(\theta) = \theta^{\sum_{i=1}^n x_ i}(1- \theta)^{n - \sum_{i=1}^n x_i } \frac{1}{B(a, b)} \theta^{a-1}(1-\theta)^{b-1} I(0 < \theta < 1)$$
+$$\propto Beta(\theta | a + \sum_{i = 1}^nx_i, b + n- \sum_{i + 1}^n x_i) $$
+
+## Poisson/Gamma
+If our data $X_1, \cdot, X_n$ are iid Poisson($\lambda$) distributed then a gamma($\alpha$, $\beta$) prior on $\lambda$ is a conjugate prior.
+The Likelyhood function is:
+$$L(\lambda | \mathbf{x}) = \prod_{i=1}^n \frac{e^{-\lambda}\lambda^{\sum_{i=1}^n x_i}}{x_i !} = \frac{e^{-\lambda}\lambda^{\sum_{i=1}^n x_i}}{\prod_{i=1}^n x_i !}$$
+
+Our gamma prior has the expression:
+$$ h(\lambda) = \frac{\beta^{\alpha}}{\Gamma(\alpha)} \lambda^{\alpha-1} e^{-\beta \lambda} $$
+
+Using bayes rule we find the following posterior:
+$$h(\lambda | \mathbf{x}) \propto h(\lambda) L(\mathbf{x}|\lambda) \propto \lambda^{\sum_{i=1}^n x_i + \alpha -1} e^{-(n+\beta)\lambda}$$
+
+$$\propto gamma(\sum_{i=1}^n x_i + \alpha, n+\beta)$$
