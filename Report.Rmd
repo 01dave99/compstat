@@ -166,10 +166,92 @@ We see that, most patients have been diagnosed in the last to stages of the dise
 
 
 
+\subsection{5. Age}
+
+The age of the patient in days. 
+
+\subsubsection{5.1 Model selection}
+The data seems to follow a poisson distribution $Poi(\lambda)$. Using the non informative Jeffreys prior, we can derive that the posterior for the parameter $\lambda$ is Gamma distributed.
+
+$$\theta | x \sim Gamma(\alpha=\frac{1}{2} + \sum_{i = 1}^n x_i, \beta = n)$$
+\subsubsection{5.2 Results}
 
 
 
+$$\theta | x \sim Gamma(\frac{1}{2} + s, n)$$
 
+```{r, echo=FALSE}
+poisson_jeffrey <- function(data){
+
+  new_data = suppressWarnings(as.numeric(data))
+
+  alpha = 1/2 + sum(new_data, na.rm=TRUE)
+  beta = length(new_data)
+  mean = alpha / beta
+  variance = alpha / beta^2
+  
+  cat("posterior distribution:", "Gamma(",alpha,",",beta,")\n")
+  cat("mean:", mean, "\n")
+  cat("variance:", variance, "\n")
+  
+  cat("HPD intervall: \n")
+  tst = rgamma(1e5, alpha, beta )
+  hdi(tst)
+}
+
+poisson_jeffrey(mydata$V5)
+```
+
+\subsection{6. Cholesterol}
+
+
+\subsubsection{6.1 Model selection}
+We assume that the data is sampled from a poisson, $Poi(\lambda)$, distribution, and we use the non informative Jeffreys prior for the rate parameter in the bayesian analysis.
+
+$$\mathbf{x} \sim Poi(\lambda)$$
+$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
+
+\subsubsection{6.2 Results}
+```{r, echo=FALSE}
+poisson_jeffrey(mydata$V12)
+```
+
+\subsection{7. Urine}
+
+\subsubsection{7.1 Model selection}
+$$\mathbf{x} \sim Poi(\lambda)$$
+$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
+
+\subsubsection{7.2 Results}
+```{r, echo=FALSE}
+poisson_jeffrey(mydata$V14)
+```
+\subsection{8 SGOT}
+
+\subsubsection{8.1 Model selection}
+$$\mathbf{x} \sim Poi(\lambda)$$
+$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
+\subsubsection{8.2 Results}
+```{r}
+poisson_jeffrey(mydata$V16)
+```
+
+\subsection{9. Plateles}
+\subsubsection{9.1 Model selection}
+$$\mathbf{x} \sim Poi(\lambda)$$
+$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
+\subsubsection{9.2 Results}
+```{r}
+poisson_jeffrey(mydata$V18)
+```
+\subsection{10. Prothrombin}
+\subsubsection{10.1 Model selection}
+$$\mathbf{x} \sim Poi(\lambda)$$
+$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
+\subsubsection{10.2 Results}
+```{r}
+poisson_jeffrey(mydata$V19)
+```
 # Appendix
 ## Bernoulli/Beta
 A natural conjugate prior for the Bernoulli distribution is the Beta distribution. 
@@ -192,3 +274,32 @@ Using bayes rule we find the following posterior:
 $$h(\lambda | \mathbf{x}) \propto h(\lambda) L(\mathbf{x}|\lambda) \propto \lambda^{\sum_{i=1}^n x_i + \alpha -1} e^{-(n+\beta)\lambda}$$
 
 $$\propto gamma(\sum_{i=1}^n x_i + \alpha, n+\beta)$$
+
+## Poisson/Jeffreys prior
+
+The density distribution for poisson is equal to
+$$f(n|\lambda) = e^{-\lambda} \frac{\lambda^n}{n!}$$
+The jeffreys prior $h(\theta$ is a non informative prior distrubution for a parameter space and its proportionality is expressed as
+
+$$ h(\theta) \propto \sqrt{ det I(\theta)} $$
+$$I(\theta) = -E[\frac{\partial^2}{\partial\theta^2} log f(x | \theta)] = \frac{1}{\theta}$$
+And the following jeffreys prior is thus
+
+$$h(\theta) \propto \theta^{-\frac{1}{2}} I_{\theta > 0}$$
+
+
+The posterior is calculated as follows
+
+$$h(\theta|x) \propto f(\mathbf{x} | \theta) h(\theta) \propto e^{-n\theta} \theta^{-\frac{1}{2} + \sum_{i = 1}^n x_i}$$ 
+which is in fact a gamma distribution
+$$\theta | x \sim Gamma(\alpha=\frac{1}{2} + \sum_{i = 1}^n x_i, \beta = n)$$
+
+
+
+
+
+
+
+
+
+
