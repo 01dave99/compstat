@@ -8,6 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(HDInterval)
+library(R2OpenBUGS)
 ```
 
 
@@ -94,11 +95,11 @@ mydata$V9<-as.numeric(mydata$V9)
 ```
 The presence of spiders is encoded in a Binary variable, where $1$ means spiders are present.
 
-\subsubsection{1.1 Model selection}
+\subsubsection{2.1 Model selection}
 We assume a Bernoulli model $Ber(\theta)$ for the presence of spiders in patients conditional on one parameter $\theta$, the probability of the presence of spiders in the patient. The density function is given as stated earlier.
 As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=1$, because we have no prior information. The density is given as above.
 
-\subsubsection{1.2 Results}
+\subsubsection{2.2 Results}
 From the given dataset we get the sample size $n$ and the sum of the observations $s$:
 ```{r}
 n<-length(mydata$V9[!is.na(mydata$V9)])
@@ -128,11 +129,11 @@ mydata$V8<-as.numeric(mydata$V8)
 ```
 The presence of hepatomegaly is encoded in a Binary variable, where $1$ means hepatomegaly is present.
 
-\subsubsection{1.1 Model selection}
+\subsubsection{3.1 Model selection}
 We assume a Bernoulli model $Ber(\theta)$ for the presence of hepatomegaly in the patient, conditional on one parameter $\theta$, the probability of the presence of hepatomegaly in the patient. The density function is given as stated earlier.
 As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=1$, because we have no prior information. The density is given as above.
 
-\subsubsection{1.2 Results}
+\subsubsection{3.2 Results}
 From the given dataset we get the sample size $n$ and the sum of the observations $s$:
 ```{r}
 n<-length(mydata$V8[!is.na(mydata$V8)])
@@ -252,6 +253,148 @@ $$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
 ```{r}
 poisson_jeffrey(mydata$V19)
 ```
+
+
+\subsection{11. Bilirubin}
+The serum bilirubin of the patients is given in mg/dl.
+
+\subsubsection{11.1 Model Selection}
+We assume by inspecting the histogramm plot,
+
+```{r, echo=FALSE}
+bilirubin<-as.numeric(mydata$V11)
+hist(bilirubin)
+
+```
+
+that the data follows a exponential distribution with parameter $\lambda$. Density is given by
+\begin{equation}
+f(x|\lambda)=\lambda e^{-\lambda x}
+\end{equation}
+As a prior for $\lambda$ we use, the jeffreys non-informative prior, namely: $h(\lambda) \propto \frac{1}{\lambda}$.
+
+\subsubsection{11.2 Results}
+From the data we get the number of samples $n$ and the sum of the samples $s$ as
+```{r, echo=FALSE}
+n<-length(bilirubin[!is.na(bilirubin)])
+s<-sum(bilirubin)
+n
+s
+```
+That means the posterior distribution for $\lambda$ is $Gamma(n,s)$.
+Which turns out to be $Gamma(312,1015.9)$. From that we get
+```{r, echo=FALSE}
+mean<-n/s
+mode<-(n-1)/(s)
+cil<-qgamma(0.05/2,312,1015.9)
+ciu<-qgamma(1-0.05/2,312,1015.9)
+cat("Posterior mean: ",mean)
+cat("Posterior mode: ",mode)
+cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
+```
+And the HPD confidence interval calculates to:
+```{r}
+tst<-rgamma(1e5,312,1015.9)
+hdi(tst)
+```
+
+\subsection{12. Albumin}
+The Albumin is given in mg/dl.
+
+\subsubsection{12.1 Model selection}
+By the histogram plot of the data we see,
+```{r echo=FALSE}
+albumin<-as.numeric(mydata$V13)
+hist(albumin)
+```
+
+
+that albumin could be gamma distributed with shape and rate parameters $a$ and $b$. We assume prior independence between $a$ and $b$ and use the marginal prior distributions $Gamma(0.001,0.001)$ for both of them.
+
+\subsubsection{12.2 Results}
+Using OpenBUGS and MCMC methods, we get posterior information about the parameters $a$ and $b$:
+```{r}
+n<-length(albumin[!is.na(albumin)])
+X<-albumin
+data1<-list("X","n")
+params<-c("a" , "b")
+inits<-list(a=1,b=1)
+fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
+fit1$summary
+```
+
+\subsection{13. Alkaline}
+The data contains the units of alkaline phosphatase per liter of the patients. 
+
+\subsubsection{13.1 Model selection}
+Since the units of alkaline per liter are integers, we assume that it is a counting process. Therefore we want to assume, that the data is poisson distributed conditional on one parameter $\lambda$. The histogram plot justifies our assumptions:
+```{r echo=FALSE}
+alkaline<-as.numeric(mydata$V15)
+hist(alkaline)
+```
+The density function of a single obervation is given as
+\begin{equation}
+f(x|\lambda)= e^{-\lambda} \frac{\lambda^x}{x!}
+\end{equation}
+As a prior for $\lambda$ we use the natural conjugate prior of the poisson distribution which is the gamma distribution. To not give a lot of prior information, we will use $Gamma(0.001,0.001)$.
+
+\subsubsection{13.2 Results}
+From our data we get the sample size $n$ and the sum $s$ over the sample:
+
+```{r echo=FALSE}
+n<-length(alkaline[!is.na(alkaline)])
+s<-sum(alkaline)
+n
+s
+```
+The posterior distribution for $\lambda$ is given by $Gamma(s+0.001,n+0.001)$ which in our case results to $Gamma(618588.601,312.001)$. This yields to:
+```{r, echo=FALSE}
+mean<-(s+0.001)/(n+0.001)
+mode<-(s+0.001-1)/(n+0.001)
+cil<-qgamma(0.05/2,618588.601,312.001)
+ciu<-qgamma(1-0.05/2,618588.601,312.001)
+cat("Posterior mean: ",mean)
+cat("Posterior mode: ",mode)
+cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
+```
+And the HPD confidence interval calculates to:
+```{r}
+tst<-rgamma(1e5,618588.601,312.001)
+hdi(tst)
+```
+
+\subsection{14. Triglicerides}
+Triglicerides of the patients in mg/dl.
+
+\subsubsection{14.1 Model selection}
+By the histogram plot of the data we see,
+```{r echo=FALSE}
+triglicerides<-as.numeric(mydata$V17)
+hist(triglicerides)
+```
+that triglicerides could be gamma distributed with shape and rate parameters $a$ and $b$. We assume prior independence between $a$ and $b$ and use the marginal prior distributions $Gamma(0.001,0.001)$ for both of them.
+
+\subsubsection{14.2 Results}
+
+By OpenBUGS and MCMC methods we get posterior information about the parameters $a$ and $b$:
+```{r}
+n<-length(triglicerides[!is.na(triglicerides)])
+X<-triglicerides
+data1<-list("X","n")
+params<-c("a" , "b")
+inits<-list(a=1,b=1)
+fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
+fit1$summary
+```
+
+
+
+
+
+
+
+
+
 # Appendix
 ## Bernoulli/Beta
 A natural conjugate prior for the Bernoulli distribution is the Beta distribution. 

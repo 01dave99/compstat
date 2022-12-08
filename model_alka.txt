@@ -1,0 +1,8 @@
+model
+{
+for(i in 1:n){
+X[i] ~ dpois(a)
+}
+
+a ~ dgamma(0.001,0.001)
+}

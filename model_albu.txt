@@ -1,0 +1,10 @@
+model
+{
+for(i in 1:n){
+X[i] ~ dgamma(a,b)
+}
+
+a ~ dgamma(0.001,0.001)
+b ~ dgamma(0.001,0.001)
+
+}
