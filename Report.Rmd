@@ -388,10 +388,18 @@ fit1$summary
 ```
 
 
-
-
-
-
+\section{Weibull Survival Analysis}
+ We will use a survival model, based on a hazard function, conditional on regression parameters and dependent on (now assumed) deterministic covariates. The hazard function is given by
+ \begin{equation}
+ \lambda(t|\alpha, \beta, \delta)=\delta \alpha t^{\alpha-1}e^{\beta^Tz}
+ \end{equation}
+where $z$ is the covariate vector.
+```{r, echo=FALSE}
+mydata[mydata=="."]<-NA
+mydata<-na.omit(mydata)
+mydata$V3[mydata$V3==1]<-0
+mydata$V3[mydata$V3==2]<-1
+```
 
 
 

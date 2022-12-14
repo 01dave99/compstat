@@ -1,0 +1,21 @@
+model
+{
+for(i in 1:n){
+
+phi[i]<-0
+
+for(j in 1:17){
+phi[i]<-phi[i]+beta[i]*x[i]
+}
+phi[i]<-exp(phi[i])
+
+zeros[i]<-0
+theta[i]<- -cens[i]*(log(delta*alpha)+(alpha-1)*log(t[i])+log(phi[i]))+delta*t[i]^alpha*phi[i]
+zeros[i] ~ dpois(theta[i])
+}
+for(j in 1:17){
+beta[j] ~ dnorm(0,0.001)
+}
+alpha ~ dgamma(0.001,0.001)
+delta ~ dgamma(0.001,0.001)
+}
