@@ -399,6 +399,19 @@ mydata[mydata=="."]<-NA
 mydata<-na.omit(mydata)
 mydata$V3[mydata$V3==1]<-0
 mydata$V3[mydata$V3==2]<-1
+
+n<-nrow(mydata)
+cens<-mydata$V3
+t<-mydata$V2
+x<-mydata[,4:20]
+x<-matrix(as.numeric(unlist(x)), ncol =17, nrow =n)
+
+data<-list("t", "x", "n", "cens")
+params<-c("alpha","beta","delta")
+inits<-list(alpha=1,beta=integer(17),delta=1)
+
+fit<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit$summary
 ```
 
 
