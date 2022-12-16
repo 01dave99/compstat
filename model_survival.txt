@@ -10,7 +10,7 @@ theta[i]<- pow(delta*alpha*pow(t[i],alpha-1)*phi[i],cens[i])*exp(-delta*pow(t[i]
 ones[i] ~ dbern(theta[i])
 }
 for(j in 1:17){
-beta[j] ~ dnorm(0,1000)
+beta[j] ~ dnorm(0,0.001)
 }
 alpha ~ dgamma(0.001,0.001)
 delta ~ dgamma(0.001,0.001)
