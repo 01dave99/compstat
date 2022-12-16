@@ -9,6 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(HDInterval)
 library(R2OpenBUGS)
+library(coda)
 ```
 
 
@@ -322,7 +323,14 @@ inits<-list(a=1,b=1)
 fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
 fit1$summary
 ```
-
+And the HPD confidence interval for $a$ calculates to:
+```{r echo=FALSE}
+hdi(fit1$sims.list$a)
+```
+whereas the HPD confidence interval for $b$ is
+```{r echo=FALSE}
+hdi(fit1$sims.list$b)
+```
 \subsection{13. Alkaline}
 The data contains the units of alkaline phosphatase per liter of the patients. 
 
@@ -386,14 +394,21 @@ inits<-list(a=1,b=1)
 fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
 fit1$summary
 ```
-
+And the HPD confidence interval for $a$ calculates to:
+```{r echo=FALSE}
+hdi(fit1$sims.list$a)
+```
+whereas the HPD confidence interval for $b$ is
+```{r echo=FALSE}
+hdi(fit1$sims.list$b)
+```
 
 \section{Weibull Survival Analysis}
  We will use a survival model, based on a hazard function, conditional on regression parameters and dependent on (now assumed) deterministic covariates. The hazard function is given by
  \begin{equation}
  \lambda(t|\alpha, \beta, \delta)=\delta \alpha t^{\alpha-1}e^{\beta^Tz}
  \end{equation}
-where $z$ is the covariate vector.
+where $z$ is the covariate vector. As prior distribution for the regression parameters $\beta$ we will use normal distributions with $0$ mean and $\sigma^2=1000$. For the parameters $\alpha$ and $\delta$ we use $Gamma(0.001,0.001)$ prior distribution. MCMC methods and OpenBUGS help us to get inference about our parameters:
 ```{r, echo=FALSE}
 mydata[mydata=="."]<-NA
 mydata<-na.omit(mydata)
@@ -413,7 +428,11 @@ inits<-list(alpha=1,beta=integer(17),delta=1)
 fit<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
 fit$summary
 ```
-
+By applying Heidelberg and Welchs method to decide whether the simulated values from the markov chain come from its stationary distribution we get
+```{r echo=FALSE}
+chain1 <- as.mcmc(fit$sims.matrix[,c(1:19)])
+heidel.diag(chain1)
+```
 
 
 # Appendix
