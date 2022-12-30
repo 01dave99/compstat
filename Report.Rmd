@@ -408,7 +408,7 @@ hdi(fit1$sims.list$b)
  \begin{equation}
  \lambda(t|\alpha, \beta, \delta)=\delta \alpha t^{\alpha-1}e^{\beta^Tz}
  \end{equation}
-where $z$ is the covariate vector. As prior distribution for the regression parameters $\beta$ we will use normal distributions with $0$ mean and $\sigma^2=1000$. For the parameters $\alpha$ and $\delta$ we use $Gamma(0.001,0.001)$ prior distribution. MCMC methods and OpenBUGS help us to get inference about our parameters:
+where $z$ is the covariate vector. As prior distribution for the regression parameters $\beta$ we will use normal distributions with $0$ mean and $\sigma^2=1000$. For the parameters $\alpha$ and $\delta$ we use $Gamma(0.001,0.001)$ prior distribution. Prior independence is assumed. MCMC methods and OpenBUGS help us to get inference about our parameters:
 ```{r, echo=FALSE}
 mydata[mydata=="."]<-NA
 mydata<-na.omit(mydata)
@@ -422,17 +422,110 @@ x<-mydata[,4:20]
 x<-matrix(as.numeric(unlist(x)), ncol =17, nrow =n)
 
 data<-list("t", "x", "n", "cens")
-params<-c("alpha","beta","delta")
-inits<-list(alpha=1,beta=integer(17),delta=1)
+params<-c("alpha","beta","delta","Y")
+inits<-list(alpha=1,beta=integer(17),delta=1,Y=rep(1,n))
 
 fit<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
-fit$summary
+fit$summary[1:19,]
 ```
 By applying Heidelberg and Welchs method to decide whether the simulated values from the markov chain come from its stationary distribution we get
 ```{r echo=FALSE}
 chain1 <- as.mcmc(fit$sims.matrix[,c(1:19)])
 heidel.diag(chain1)
 ```
+To assess the quality of our model, we compute standardized predictive residuals for uncensored data. For a uncencored survival time $y(z)$, dependent of a covariate vector $z$, and the posterior predictive $Y(z)|x$, where $x$ is the data used in the bayesian analysis, we define the standardized predictive residual as
+\begin{equation}
+d=\frac{y(z)-E(Y(z)|x)}{\sqrt{Var(Y(z)|x)}}
+\end{equation}
+```{r}
+d<-abs((t[cens==1]-fit$mean$Y[cens==1])/fit$sd$Y[cens==1])
+sum(d)
+```
+The sum of the absolute values of the predictive residuals indicates the quality of the model.
+Now we will remove covariates with small regression coefficient means, trying to find better model fits. For the second model we kick out covariates for Age, Spiders and Cholesterol:
+```{r, echo=FALSE}
+
+n<-nrow(mydata)
+cens<-mydata$V3
+t<-mydata$V2
+x<-mydata[,c(4,6,7,8,10,11,13,14,15,16,17,18,19,20)]
+x<-matrix(as.numeric(unlist(x)), ncol =14, nrow =n)
+
+data<-list("t", "x", "n", "cens")
+params<-c("alpha","beta","delta","Y")
+inits<-list(alpha=1,beta=integer(14),delta=1,Y=rep(1,n))
+
+fit2<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival2.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit2$summary[1:16,]
+```
+```{r}
+d<-abs((t[cens==1]-fit2$mean$Y[cens==1])/fit2$sd$Y[cens==1])
+sum(d)
+```
+We see that our model improved a lot! We continue by neglecting, the used drug and the presence of asictes to get another model:
+
+```{r, echo=FALSE}
+
+n<-nrow(mydata)
+cens<-mydata$V3
+t<-mydata$V2
+x<-mydata[,c(6,8,10,11,13,14,15,16,17,18,19,20)]
+x<-matrix(as.numeric(unlist(x)), ncol =12, nrow =n)
+
+data<-list("t", "x", "n", "cens")
+params<-c("alpha","beta","delta","Y")
+inits<-list(alpha=1,beta=integer(12),delta=1,Y=rep(1,n))
+
+fit3<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival3.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit3$summary[1:14,]
+```
+```{r}
+d<-abs((t[cens==1]-fit3$mean$Y[cens==1])/fit3$sd$Y[cens==1])
+sum(d)
+```
+We see that our model improved a little! We continue by neglecting the sex, presence of hepatomegaly, alkaline, triglicerides and platelets:
+
+```{r, echo=FALSE}
+
+n<-nrow(mydata)
+cens<-mydata$V3
+t<-mydata$V2
+x<-mydata[,c(10,11,13,14,16,19,20)]
+x<-matrix(as.numeric(unlist(x)), ncol =7, nrow =n)
+
+data<-list("t", "x", "n", "cens")
+params<-c("alpha","beta","delta","Y")
+inits<-list(alpha=1,beta=integer(7),delta=1,Y=rep(1,n))
+
+fit4<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival4.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit4$summary[1:9,]
+```
+```{r}
+d<-abs((t[cens==1]-fit4$mean$Y[cens==1])/fit4$sd$Y[cens==1])
+sum(d)
+```
+We see that our model improved a little! For our last model we neglect, SGOT, and we get:
+```{r, echo=FALSE}
+
+n<-nrow(mydata)
+cens<-mydata$V3
+t<-mydata$V2
+x<-mydata[,c(10,11,13,14,19,20)]
+x<-matrix(as.numeric(unlist(x)), ncol =6, nrow =n)
+
+data<-list("t", "x", "n", "cens")
+params<-c("alpha","beta","delta","Y")
+inits<-list(alpha=1,beta=integer(6),delta=1,Y=rep(1,n))
+
+fit5<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival5.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit5$summary[1:8,]
+```
+
+```{r}
+d<-abs((t[cens==1]-fit5$mean$Y[cens==1])/fit5$sd$Y[cens==1])
+sum(d)
+```
+Our model got worse! So we stop at the previous model and keep that as our survival model. Our remaining covariates are Edema, Bilirubin, Albumin, Urin copper, SGOT, prothrombin time and histologic stage. In the after-transplantation lifetime study, those covariates also play the most important role (except SGOT and urine copper)
 
 
 # Appendix

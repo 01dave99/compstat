@@ -1,0 +1,19 @@
+model
+{
+for(i in 1:n){
+
+
+phi[i]<-exp(inprod(beta[],x[i,]))
+
+ones[i]<-1
+theta[i]<- pow(delta*alpha*pow(t[i],alpha-1)*phi[i],cens[i])*exp(-delta*pow(t[i],alpha)*phi[i])
+ones[i] ~ dbern(theta[i])
+lambda[i]<-delta*phi[i]
+Y[i] ~ dweib(alpha,lambda[i])
+}
+for(j in 1:12){
+beta[j] ~ dnorm(0,0.001)
+}
+alpha ~ dgamma(0.001,0.001)
+delta ~ dgamma(0.001,0.001)
+}
