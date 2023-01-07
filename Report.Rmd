@@ -175,12 +175,7 @@ The age of the patient in days.
 \subsubsection{5.1 Model selection}
 The data seems to follow a poisson distribution $Poi(\lambda)$. Using the non informative Jeffreys prior, we can derive that the posterior for the parameter $\lambda$ is Gamma distributed.
 
-$$\theta | x \sim Gamma(\alpha=\frac{1}{2} + \sum_{i = 1}^n x_i, \beta = n)$$
 \subsubsection{5.2 Results}
-
-
-
-$$\theta | x \sim Gamma(\frac{1}{2} + s, n)$$
 
 ```{r, echo=FALSE}
 poisson_jeffrey <- function(data){
@@ -208,10 +203,9 @@ poisson_jeffrey(mydata$V5)
 
 
 \subsubsection{6.1 Model selection}
-We assume that the data is sampled from a poisson, $Poi(\lambda)$, distribution, and we use the non informative Jeffreys prior for the rate parameter in the bayesian analysis.
+We assume that the data is sampled from a poisson, $Poi(\lambda)$, distribution, and we use the non informative Jeffreys prior for the rate parameter in the Bayesian analysis.
 
-$$\mathbf{x} \sim Poi(\lambda)$$
-$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
+
 
 \subsubsection{6.2 Results}
 ```{r, echo=FALSE}
@@ -220,39 +214,66 @@ poisson_jeffrey(mydata$V12)
 
 \subsection{7. Urine}
 
+Urine copper in ug/day
+
 \subsubsection{7.1 Model selection}
-$$\mathbf{x} \sim Poi(\lambda)$$
-$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
+
+By observing the data we see that it seems to follow a poisson distribution.
 
 \subsubsection{7.2 Results}
+Using the non informative jeffreys prior we get the following posterior results:
+
 ```{r, echo=FALSE}
 poisson_jeffrey(mydata$V14)
 ```
 \subsection{8 SGOT}
 
 \subsubsection{8.1 Model selection}
-$$\mathbf{x} \sim Poi(\lambda)$$
-$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
-\subsubsection{8.2 Results}
+
 ```{r}
-poisson_jeffrey(mydata$V16)
+hist(mydata$V16)
+```
+By in observing the data and the histogram plot we can make the assumption that the data is sampled from a Gamma distribution with parameters a and b. Using MCMC methods included in the OpenBUGS library we can estimate the posterior parameters. We assume prior parameters $a=b = 0.001$
+
+\subsubsection{8.2 Results}
+```{r, echo=FALSE}
+n<-length(mydata$V16[!is.na(mydata$V16)])
+X<-mydata$V16
+data1<-list("X","n")
+params<-c("a" , "b")
+inits<-list(a=1,b=1)
+fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
+fit1$summary
 ```
 
 \subsection{9. Plateles}
+
+data given in per cubic ml / 1000. 
+
 \subsubsection{9.1 Model selection}
-$$\mathbf{x} \sim Poi(\lambda)$$
-$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
+
+The data resembles a poisson distribution. Using the non informative prior we can calculate the posterior gamma distribution for the rate parameter.
+
 \subsubsection{9.2 Results}
-```{r}
+```{r, echo=FALSE}
 poisson_jeffrey(mydata$V18)
 ```
+
 \subsection{10. Prothrombin}
+Prothrombin data given in seconds.
+
 \subsubsection{10.1 Model selection}
-$$\mathbf{x} \sim Poi(\lambda)$$
-$$h(\lambda) \propto \lambda^{-\frac{1}{2}}$$
+By inspecting the data and histogram we can assume that it follows a Gamma distribution. Again using MCMC methods with the OpenBUGS library we can estimate the posterior information on the parameters.
+
 \subsubsection{10.2 Results}
-```{r}
-poisson_jeffrey(mydata$V19)
+```{r, echo=FALSE}
+n<-length(mydata$V19[!is.na(mydata$V19)])
+X<-mydata$V19
+data1<-list("X","n")
+params<-c("a" , "b")
+inits<-list(a=1,b=1)
+fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
+fit1$summary
 ```
 
 
@@ -425,7 +446,7 @@ data<-list("t", "x", "n", "cens")
 params<-c("alpha","beta","delta","Y")
 inits<-list(alpha=1,beta=integer(17),delta=1,Y=rep(1,n))
 
-fit<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=FALSE, save.history=FALSE, DIC=TRUE)
 fit$summary[1:19,]
 ```
 By applying Heidelberg and Welchs method to decide whether the simulated values from the markov chain come from its stationary distribution we get
@@ -455,7 +476,7 @@ data<-list("t", "x", "n", "cens")
 params<-c("alpha","beta","delta","Y")
 inits<-list(alpha=1,beta=integer(14),delta=1,Y=rep(1,n))
 
-fit2<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival2.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit2<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival2.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=FALSE, save.history=FALSE, DIC=TRUE)
 fit2$summary[1:16,]
 ```
 ```{r}
@@ -476,7 +497,7 @@ data<-list("t", "x", "n", "cens")
 params<-c("alpha","beta","delta","Y")
 inits<-list(alpha=1,beta=integer(12),delta=1,Y=rep(1,n))
 
-fit3<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival3.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit3<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival3.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=FALSE, save.history=FALSE, DIC=TRUE)
 fit3$summary[1:14,]
 ```
 ```{r}
@@ -497,7 +518,7 @@ data<-list("t", "x", "n", "cens")
 params<-c("alpha","beta","delta","Y")
 inits<-list(alpha=1,beta=integer(7),delta=1,Y=rep(1,n))
 
-fit4<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival4.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit4<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival4.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=FALSE, save.history=FALSE, DIC=TRUE)
 fit4$summary[1:9,]
 ```
 ```{r}
@@ -517,7 +538,7 @@ data<-list("t", "x", "n", "cens")
 params<-c("alpha","beta","delta","Y")
 inits<-list(alpha=1,beta=integer(6),delta=1,Y=rep(1,n))
 
-fit5<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival5.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
+fit5<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival5.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=FALSE, save.history=FALSE, DIC=TRUE)
 fit5$summary[1:8,]
 ```
 
