@@ -1,5 +1,5 @@
 ---
-title: "Computational Statistics-Report"
+title: "ReportRevisited"
 author: "David Niederkofler, Erlend Lokna"
 date: "`r Sys.Date()`"
 output: pdf_document
@@ -7,6 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=4, fig.height=3)
 library(HDInterval)
 library(R2OpenBUGS)
 library(coda)
@@ -14,49 +15,51 @@ library(coda)
 
 
 
-```{r}
+```{r, echo=FALSE}
 mydata<-read.table("Report2_Dataset.txt", header=FALSE)
 ```
+
 \section{Statistical Analysis of Covariates}
-It is important to mention the use of notation before we proceed. We will in this section use the notation $\mathbf{x} = \{x_1, x_2, \cdots, x_n\}$ as our covariate vector.
 
 
-\subsection{Ascictes}
-```{r, include=FALSE}
-mydata$V7<-as.numeric(mydata$V7)
-```
+\subsection{1. Age}
 
+The age of the patient in days. 
 
 \subsubsection{1.1 Model selection}
-Since the Ascictes - covariate has a 0-1 outcome we can assume that it is Bernoulli distributed with parameter $\theta$. A natural conjugate prior for the Bernoulli distribution is the Beta distribution. The posterior beta distribution for the parameter is given by
-$$Beta(\theta | a + \sum_{i = 1}^nx_i, b + n- \sum_{i + 1}^n x_i)$$
+The data seems to follow a poisson distribution $Poi(\lambda)$. Using the non informative Jeffreys prior, we can derive that the posterior for the parameter $\lambda$ is Gamma distributed.
+
 \subsubsection{1.2 Results}
-The Beta distribution reduces to a simple uniform distribution. Since we have minimal prior knowledge about the the parameters we will continue with a prior distribution that is uniformly distributed.
 ```{r, echo=FALSE}
-n<-length(mydata$V6[!is.na(mydata$V7)])
-s<-sum(mydata$V7)
-mean<-(2+s)/(4+n)
-mode<-(1+s)/(2+n)
-cil<-qbeta(0.05/2, 1+s, 1 + n - s)
-ciu<-qbeta(1-0.05/2,1+s, 1 + n - s)
-cat("Posterior mean: ",mean)
-cat("Posterior mode: ",mode)
-cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
+new_data = suppressWarnings(as.numeric(mydata$V5))
+
+alpha = 1/2 + sum(new_data, na.rm=TRUE)
+beta = length(new_data)
+mean = alpha / beta
+variance = alpha / beta^2
 ```
-With the following HPD interval:
-```{r, echo = FALSE}
-hdi(rbeta(1e5, 1+s, 1 + n - s))
+The posterior distribution is:
+```{r, echo=FALSE}
+cat("Gamma(",alpha,",",beta,")")
+```
+With mean and variance:
+```{r, echo=FALSE}
+cat("mean:", mean,",", "variance:", variance, "\n")
+```
+The 95% HDI interval calculates to:
+```{r, echo=FALSE}
+tst = rgamma(1e5, alpha, beta )
+hdi(tst)
 ```
 
 
-
-
-\subsection{1. Sex}
+\subsection{2. Sex}
 ```{r, include=FALSE}
 mydata$V6<-as.numeric(mydata$V6)
 ```
 The sex of the patients is encoded in a binary variable, where $0$ means \emph{male} and $1$ means \emph{female}.
-\subsubsection{1.1 Model selection}
+
+\subsubsection{2.1 Model selection}
 We assume a Bernoulli model $Ber(\theta)$ for the sex of the patient conditional on one parameter $\theta$, the probability of the patient to be female. The density function is given by
 \begin{equation}
 f(x|\theta)=\theta^x(1-\theta)^{1-x},
@@ -66,7 +69,7 @@ where $x \in \{0,1\}$. As a prior distribution for $\theta$ we use the natural c
 h(\theta)=\frac{\Gamma(a+b)}{\Gamma(a) \Gamma(b)} \theta^{a-1} (1-\theta)^{b-1},
 \end{equation}
 for $\theta \in [0,1].$
-\subsubsection{1.2 Results}
+\subsubsection{2.2 Results}
 From the given dataset we get the sample size $n$ and the sum of the observations $s$:
 ```{r}
 n<-length(mydata$V6[!is.na(mydata$V6)])
@@ -90,51 +93,48 @@ And the HPD confidence Interval calculates to:
 tst<-rbeta(1e5,278,38)
 hdi(tst)
 ```
-\subsection{2. Spiders}
+
+\subsection{3 Ascictes}
 ```{r, include=FALSE}
-mydata$V9<-as.numeric(mydata$V9)
+mydata$V7<-as.numeric(mydata$V7)
 ```
-The presence of spiders is encoded in a Binary variable, where $1$ means spiders are present.
 
-\subsubsection{2.1 Model selection}
-We assume a Bernoulli model $Ber(\theta)$ for the presence of spiders in patients conditional on one parameter $\theta$, the probability of the presence of spiders in the patient. The density function is given as stated earlier.
-As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=1$, because we have no prior information. The density is given as above.
 
-\subsubsection{2.2 Results}
-From the given dataset we get the sample size $n$ and the sum of the observations $s$:
-```{r}
-n<-length(mydata$V9[!is.na(mydata$V9)])
-s<-sum(mydata$V9)
-n
-s
-```
-Therefore the posterior distribution is $Beta(1+s,1+n-s)$, which turns out to be $Beta(91,223)$.
-From that we get
+\subsubsection{3.1 Model selection}
+Since the Ascictes - covariate has a 0-1 outcome we can assume that it is Bernoulli distributed with parameter $\theta$. A natural conjugate prior for the Bernoulli distribution is the Beta distribution. The posterior beta distribution for the parameter is given by
+$$Beta(\theta | a + \sum_{i = 1}^nx_i, b + n- \sum_{i + 1}^n x_i)$$
+\subsubsection{3.2 Results}
+The Beta distribution reduces to a simple uniform distribution. Since we have minimal prior knowledge about the the parameters we will continue with a prior distribution that is uniformly distributed.
+
+The posterior distribution has the following calculated information: 
 ```{r, echo=FALSE}
+n<-length(mydata$V6[!is.na(mydata$V7)])
+s<-sum(mydata$V7)
 mean<-(2+s)/(4+n)
 mode<-(1+s)/(2+n)
-cil<-qbeta(0.05/2,91,223)
-ciu<-qbeta(1-0.05/2,91,223)
+cil<-qbeta(0.05/2, 1+s, 1 + n - s)
+ciu<-qbeta(1-0.05/2,1+s, 1 + n - s)
 cat("Posterior mean: ",mean)
 cat("Posterior mode: ",mode)
 cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
 ```
-And the HPD confidence interval calculates to:
-```{r}
-tst<-rbeta(1e5,91,223)
-hdi(tst)
+With the HPD interval:
+```{r, echo = FALSE}
+hdi(rbeta(1e5, 1+s, 1 + n - s))
 ```
-\subsection{3. Hepatomegaly}
+
+
+\subsection{4. Hepatomegaly}
 ```{r, include=FALSE}
 mydata$V8<-as.numeric(mydata$V8)
 ```
 The presence of hepatomegaly is encoded in a Binary variable, where $1$ means hepatomegaly is present.
 
-\subsubsection{3.1 Model selection}
+\subsubsection{4.1 Model selection}
 We assume a Bernoulli model $Ber(\theta)$ for the presence of hepatomegaly in the patient, conditional on one parameter $\theta$, the probability of the presence of hepatomegaly in the patient. The density function is given as stated earlier.
 As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=1$, because we have no prior information. The density is given as above.
 
-\subsubsection{3.2 Results}
+\subsubsection{4.2 Results}
 From the given dataset we get the sample size $n$ and the sum of the observations $s$:
 ```{r}
 n<-length(mydata$V8[!is.na(mydata$V8)])
@@ -158,132 +158,62 @@ And the HPD confidence interval calculates to:
 tst<-rbeta(1e5,161,153)
 hdi(tst)
 ```
-\subsection{4. Histologic stage}
-The Histologic stage of the disease is a number in $\{1,2,3,4\}$, where the stage increases with severeness. We will give here the frequencies of the stages in the dataset.
-```{r, echo=FALSE}
-mydata$V20<- factor(mydata$V20,levels=c(1,2,3,4),labels=c("1","2","3","4"))
-summary(mydata$V20)
+
+\subsection{5. Spiders}
+```{r, include=FALSE}
+mydata$V9<-as.numeric(mydata$V9)
 ```
-We see that, most patients have been diagnosed in the last to stages of the disease.
-
-
-
-\subsection{5. Age}
-
-The age of the patient in days. 
+The presence of spiders is encoded in a Binary variable, where $1$ means spiders are present.
 
 \subsubsection{5.1 Model selection}
-The data seems to follow a poisson distribution $Poi(\lambda)$. Using the non informative Jeffreys prior, we can derive that the posterior for the parameter $\lambda$ is Gamma distributed.
+We assume a Bernoulli model $Ber(\theta)$ for the presence of spiders in patients conditional on one parameter $\theta$, the probability of the presence of spiders in the patient. The density function is given as stated earlier.
+As a prior distribution for $\theta$ we use the natural conjugate family of the Bernoulli distribution, namely the Beta distribution, $Beta(a,b)$, with two shape parameters $a=b=1$, because we have no prior information. The density is given as above.
 
 \subsubsection{5.2 Results}
-
-```{r, echo=FALSE}
-poisson_jeffrey <- function(data){
-
-  new_data = suppressWarnings(as.numeric(data))
-
-  alpha = 1/2 + sum(new_data, na.rm=TRUE)
-  beta = length(new_data)
-  mean = alpha / beta
-  variance = alpha / beta^2
-  
-  cat("posterior distribution:", "Gamma(",alpha,",",beta,")\n")
-  cat("mean:", mean, "\n")
-  cat("variance:", variance, "\n")
-  
-  cat("HPD intervall: \n")
-  tst = rgamma(1e5, alpha, beta )
-  hdi(tst)
-}
-
-poisson_jeffrey(mydata$V5)
-```
-
-\subsection{6. Cholesterol}
-
-
-\subsubsection{6.1 Model selection}
-We assume that the data is sampled from a poisson, $Poi(\lambda)$, distribution, and we use the non informative Jeffreys prior for the rate parameter in the Bayesian analysis.
-
-
-
-\subsubsection{6.2 Results}
-```{r, echo=FALSE}
-poisson_jeffrey(mydata$V12)
-```
-
-\subsection{7. Urine}
-
-Urine copper in ug/day
-
-\subsubsection{7.1 Model selection}
-
-By observing the data we see that it seems to follow a poisson distribution.
-
-\subsubsection{7.2 Results}
-Using the non informative jeffreys prior we get the following posterior results:
-
-```{r, echo=FALSE}
-poisson_jeffrey(mydata$V14)
-```
-\subsection{8 SGOT}
-
-\subsubsection{8.1 Model selection}
-
+From the given dataset we get the sample size $n$ and the sum of the observations $s$:
 ```{r}
-hist(mydata$V16)
+n<-length(mydata$V9[!is.na(mydata$V9)])
+s<-sum(mydata$V9)
+n
+s
 ```
-By in observing the data and the histogram plot we can make the assumption that the data is sampled from a Gamma distribution with parameters a and b. Using MCMC methods included in the OpenBUGS library we can estimate the posterior parameters. We assume prior parameters $a=b = 0.001$
-
-\subsubsection{8.2 Results}
+Therefore the posterior distribution is $Beta(1+s,1+n-s)$, which turns out to be $Beta(91,223)$.
+From that we get
 ```{r, echo=FALSE}
-n<-length(mydata$V16[!is.na(mydata$V16)])
-X<-mydata$V16
-data1<-list("X","n")
-params<-c("a" , "b")
-inits<-list(a=1,b=1)
-fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
-fit1$summary
+mean<-(2+s)/(4+n)
+mode<-(1+s)/(2+n)
+cil<-qbeta(0.05/2,91,223)
+ciu<-qbeta(1-0.05/2,91,223)
+cat("Posterior mean: ",mean)
+cat("Posterior mode: ",mode)
+cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
+```
+And the HPD confidence interval calculates to:
+```{r}
+tst<-rbeta(1e5,91,223)
+hdi(tst)
 ```
 
-\subsection{9. Plateles}
 
-data given in per cubic ml / 1000. 
+\subsection{6. Edema}
+The presence of edema is coded into (0, 0.5, 1). Where 0 is the class corresponding to no edema and no diuretic therapy for edema. The class 0.5 corresponds to edema present without diuretics, or edema resolved by diuretics. Lastly the class 1 corresponds to edema despite diuretic therapy.
 
-\subsubsection{9.1 Model selection}
 
-The data resembles a poisson distribution. Using the non informative prior we can calculate the posterior gamma distribution for the rate parameter.
-
-\subsubsection{9.2 Results}
 ```{r, echo=FALSE}
-poisson_jeffrey(mydata$V18)
+factors <- factor(mydata$V10,levels=c(0,0.5,1),labels=c("0","0.5","1"))
+summary(factors)
 ```
 
-\subsection{10. Prothrombin}
-Prothrombin data given in seconds.
-
-\subsubsection{10.1 Model selection}
-By inspecting the data and histogram we can assume that it follows a Gamma distribution. Again using MCMC methods with the OpenBUGS library we can estimate the posterior information on the parameters.
-
-\subsubsection{10.2 Results}
-```{r, echo=FALSE}
-n<-length(mydata$V19[!is.na(mydata$V19)])
-X<-mydata$V19
-data1<-list("X","n")
-params<-c("a" , "b")
-inits<-list(a=1,b=1)
-fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
-fit1$summary
-```
+We observe from the frequencies that most of the patients don't have edema and do not go to diuretic therapy for edema.
 
 
-\subsection{11. Bilirubin}
+\subsection{7. Bilirubin}
 The serum bilirubin of the patients is given in mg/dl.
 
-\subsubsection{11.1 Model Selection}
+\subsubsection{7.1 Model Selection}
 We assume by inspecting the histogramm plot,
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.align = 'center'}
 bilirubin<-as.numeric(mydata$V11)
 hist(bilirubin)
 
@@ -295,7 +225,7 @@ f(x|\lambda)=\lambda e^{-\lambda x}
 \end{equation}
 As a prior for $\lambda$ we use, the jeffreys non-informative prior, namely: $h(\lambda) \propto \frac{1}{\lambda}$.
 
-\subsubsection{11.2 Results}
+\subsubsection{7.2 Results}
 From the data we get the number of samples $n$ and the sum of the samples $s$ as
 ```{r, echo=FALSE}
 n<-length(bilirubin[!is.na(bilirubin)])
@@ -320,12 +250,44 @@ tst<-rgamma(1e5,312,1015.9)
 hdi(tst)
 ```
 
-\subsection{12. Albumin}
+
+\subsection{8. Cholesterol}
+
+
+\subsubsection{8.1 Model selection}
+We assume that the data is sampled from a poisson, $Poi(\lambda)$, distribution, and we use the non informative Jeffreys prior for the rate parameter.
+
+
+\subsubsection{8.2 Results}
+```{r, echo=FALSE}
+new_data = suppressWarnings(as.numeric(mydata$V12))
+
+alpha = 1/2 + sum(new_data, na.rm=TRUE)
+beta = length(new_data)
+mean = alpha / beta
+variance = alpha / beta^2
+```
+The posterior distribution is:
+```{r, echo=FALSE}
+cat("Gamma(",alpha,",",beta,")")
+```
+With mean and variance:
+```{r, echo=FALSE}
+cat("mean:", mean,",", "variance:", variance, "\n")
+```
+The 95% HDI interval calculates to:
+```{r, echo=FALSE}
+tst = rgamma(1e5, alpha, beta )
+hdi(tst)
+```
+
+
+\subsection{9. Albumin}
 The Albumin is given in mg/dl.
 
-\subsubsection{12.1 Model selection}
+\subsubsection{9.1 Model selection}
 By the histogram plot of the data we see,
-```{r echo=FALSE}
+```{r echo=FALSE, fig.align = 'center'}
 albumin<-as.numeric(mydata$V13)
 hist(albumin)
 ```
@@ -333,7 +295,7 @@ hist(albumin)
 
 that albumin could be gamma distributed with shape and rate parameters $a$ and $b$. We assume prior independence between $a$ and $b$ and use the marginal prior distributions $Gamma(0.001,0.001)$ for both of them.
 
-\subsubsection{12.2 Results}
+\subsubsection{9.2 Results}
 Using OpenBUGS and MCMC methods, we get posterior information about the parameters $a$ and $b$:
 ```{r}
 n<-length(albumin[!is.na(albumin)])
@@ -352,12 +314,47 @@ whereas the HPD confidence interval for $b$ is
 ```{r echo=FALSE}
 hdi(fit1$sims.list$b)
 ```
-\subsection{13. Alkaline}
+
+
+\subsection{10. Urine}
+
+Urine copper in ug/day
+
+\subsubsection{10.1 Model selection}
+
+By observing the data we see that it seems to follow a poisson distribution.
+
+\subsubsection{10.2 Results}
+Using the non informative jeffreys prior we get the following posterior results:
+
+```{r, echo=FALSE}
+new_data = suppressWarnings(as.numeric(mydata$V14))
+
+alpha = 1/2 + sum(new_data, na.rm=TRUE)
+beta = length(new_data)
+mean = alpha / beta
+variance = alpha / beta^2
+```
+The posterior distribution is:
+```{r, echo=FALSE}
+cat("Gamma(",alpha,",",beta,")")
+```
+With mean and variance:
+```{r, echo=FALSE}
+cat("mean:", mean,",", "variance:", variance, "\n")
+```
+The 95% HDI interval calculates to:
+```{r, echo=FALSE, fig.align = 'center'}
+tst = rgamma(1e5, alpha, beta )
+hdi(tst)
+```
+
+\subsection{11. Alkaline}
 The data contains the units of alkaline phosphatase per liter of the patients. 
 
-\subsubsection{13.1 Model selection}
+\subsubsection{11.1 Model selection}
 Since the units of alkaline per liter are integers, we assume that it is a counting process. Therefore we want to assume, that the data is poisson distributed conditional on one parameter $\lambda$. The histogram plot justifies our assumptions:
-```{r echo=FALSE}
+```{r echo=FALSE, fig.align = 'center'}
 alkaline<-as.numeric(mydata$V15)
 hist(alkaline)
 ```
@@ -367,7 +364,7 @@ f(x|\lambda)= e^{-\lambda} \frac{\lambda^x}{x!}
 \end{equation}
 As a prior for $\lambda$ we use the natural conjugate prior of the poisson distribution which is the gamma distribution. To not give a lot of prior information, we will use $Gamma(0.001,0.001)$.
 
-\subsubsection{13.2 Results}
+\subsubsection{11.2 Results}
 From our data we get the sample size $n$ and the sum $s$ over the sample:
 
 ```{r echo=FALSE}
@@ -387,26 +384,55 @@ cat("Posterior mode: ",mode)
 cat("Centered 95% Confidence Interval: [",cil,",",ciu,"]")
 ```
 And the HPD confidence interval calculates to:
-```{r}
+```{r, fig.align = 'center'}
 tst<-rgamma(1e5,618588.601,312.001)
 hdi(tst)
 ```
 
-\subsection{14. Triglicerides}
+\subsection{12 SGOT}
+Data provided in U/ml
+\subsubsection{12.1 Model selection}
+
+```{r, echo=FALSE, fig.align = 'center'}
+hist(mydata$V16, main="Histogram of SGOT")
+```
+By inspecting the data and the histogram plot we can make the assumption that the data is sampled from a Gamma distribution with parameters a and b. Using MCMC methods included in the OpenBUGS library we can estimate the posterior parameters. We assume prior parameters $a=b = 0.001$
+
+\subsubsection{12.2 Results}
+```{r, echo=FALSE}
+n<-length(mydata$V16[!is.na(mydata$V16)])
+X<-mydata$V16
+data1<-list("X","n")
+params<-c("a" , "b")
+inits<-list(a=1,b=1)
+fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
+fit1$summary
+```
+
+with the following HDI for the parameters a and b respectively:
+```{r}
+hdi(fit1$sims.list$a)
+```
+```{r}
+hdi(fit1$sims.list$b)
+```
+
+
+\subsection{13. Triglicerides}
 Triglicerides of the patients in mg/dl.
 
-\subsubsection{14.1 Model selection}
+\subsubsection{13.1 Model selection}
 By the histogram plot of the data we see,
-```{r echo=FALSE}
+```{r echo=FALSE, fig.align = 'center'}
 triglicerides<-as.numeric(mydata$V17)
 hist(triglicerides)
 ```
 that triglicerides could be gamma distributed with shape and rate parameters $a$ and $b$. We assume prior independence between $a$ and $b$ and use the marginal prior distributions $Gamma(0.001,0.001)$ for both of them.
 
-\subsubsection{14.2 Results}
+\subsubsection{13.2 Results}
 
 By OpenBUGS and MCMC methods we get posterior information about the parameters $a$ and $b$:
-```{r}
+```{r, echo=FALSE}
 n<-length(triglicerides[!is.na(triglicerides)])
 X<-triglicerides
 data1<-list("X","n")
@@ -423,6 +449,74 @@ whereas the HPD confidence interval for $b$ is
 ```{r echo=FALSE}
 hdi(fit1$sims.list$b)
 ```
+
+
+\subsection{14. Platelets}
+
+Data given in per cubic ml / 1000. 
+
+\subsubsection{14.1 Model selection}
+
+The data resembles a poisson distribution as it is measured in integers. Using the non informative prior we can calculate the posterior gamma distribution for the rate parameter.
+
+\subsubsection{14.2 Results}
+```{r, echo=FALSE}
+new_data = suppressWarnings(as.numeric(mydata$V18))
+
+alpha = 1/2 + sum(new_data, na.rm=TRUE)
+beta = length(new_data)
+mean = alpha / beta
+variance = alpha / beta^2
+```
+The posterior distribution is:
+```{r, echo=FALSE}
+cat("Gamma(",alpha,",",beta,")")
+```
+With mean and variance:
+```{r, echo=FALSE}
+cat("mean:", mean,",", "variance:", variance, "\n")
+```
+The 95% HDI interval calculates to:
+```{r, echo=FALSE}
+tst = rgamma(1e5, alpha, beta )
+hdi(tst)
+```
+
+
+\subsection{15. Prothrombin}
+Prothrombin data given in seconds.
+
+\subsubsection{15.1 Model selection}
+By inspecting the data and histogram we can assume that it follows a Gamma distribution. Again using MCMC methods with the OpenBUGS library we can estimate the posterior information on the parameters.
+
+\subsubsection{15.2 Results}
+```{r, echo=FALSE}
+n<-length(mydata$V19[!is.na(mydata$V19)])
+X<-mydata$V19
+data1<-list("X","n")
+params<-c("a" , "b")
+inits<-list(a=1,b=1)
+fit1<-bugs(data=data1,inits=list(inits),parameters.to.save=params,"model_albu.txt",n.chains=1, n.iter=20000, n.burnin = 10000,debug=FALSE, save.history = FALSE, DIC=TRUE)
+fit1$summary
+```
+
+The 95% HDI for the a - parameter:
+```{r, echo=FALSE}
+hdi(fit1$sims.list$a)
+```
+The 95% HDI for the b-parameter:
+```{r, echo=FALSE}
+hdi(fit1$sims.list$b)
+```
+
+\subsection{16. Histologic stage}
+The Histologic stage of the disease is a number in $\{1,2,3,4\}$, where the stage increases with severeness. We will give here the frequencies of the stages in the dataset.
+```{r, echo=FALSE}
+mydata$V20<- factor(mydata$V20,levels=c(1,2,3,4),labels=c("1","2","3","4"))
+summary(mydata$V20)
+```
+We see that, most patients have been diagnosed in the last to stages of the disease.
+
 
 \section{Weibull Survival Analysis}
  We will use a survival model, based on a hazard function, conditional on regression parameters and dependent on (now assumed) deterministic covariates. The hazard function is given by
@@ -485,7 +579,7 @@ sum(d)
 ```
 We see that our model improved a lot! We continue by neglecting, the used drug and the presence of asictes to get another model:
 
-|```{r, echo=FALSE}
+```{r, echo=FALSE}
 
 n<-nrow(mydata)
 cens<-mydata$V3
@@ -546,6 +640,7 @@ fit5$summary[1:8,]
 d<-abs((t[cens==1]-fit5$mean$Y[cens==1])/fit5$sd$Y[cens==1])
 sum(d)
 ```
+
 Our model got worse! So we stop at the previous model and keep that as our survival model. Our remaining covariates are Edema, Bilirubin, Albumin, Urin copper, SGOT, prothrombin time and histologic stage. In the after-transplantation lifetime study, those covariates also play the most important role (except SGOT and urine copper)
 
 
@@ -590,9 +685,6 @@ The posterior is calculated as follows
 $$h(\theta|x) \propto f(\mathbf{x} | \theta) h(\theta) \propto e^{-n\theta} \theta^{-\frac{1}{2} + \sum_{i = 1}^n x_i}$$ 
 which is in fact a gamma distribution
 $$\theta | x \sim Gamma(\alpha=\frac{1}{2} + \sum_{i = 1}^n x_i, \beta = n)$$
-
-
-
 
 
 
