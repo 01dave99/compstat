@@ -19,16 +19,20 @@ library(coda)
 mydata<-read.table("Report2_Dataset.txt", header=FALSE)
 ```
 
+\section{Introduction}
+
+Bayesian inference is a statistical method that allows us to estimate the probability of a hypothesis given some observed data. In the context of this report, Bayesian inference is used to better understand the distribution of posterior parameters in a data set. By using Bayesian inference, we can obtain more accurate estimates of the parameters that describe our data, and make more informed decisions about the underlying processes that generated the data. To calculate the parameter posteriors we will sample posterior predictive values with the help of Markov chain Monte Carlo Methods. Additionally, Monte Carlo methods are used to perform a Weibull survival analysis, which allows us to estimate the probability of the survival of a patient. Overall, this report aims to provide a better understanding of how the data was generated, and how the different factors in the data set may be related to the outcome of patient survival time.
+
 \section{Statistical Analysis of Covariates}
 
-We will begin this report by making Bayesian inference on the covariates and estimating the posterior distributions for the parameters in the sample distributions. In the end we will make a survival analysis.
+In this section we will perform the Bayesian inference on the Covariates.
 
 \subsection{1. Age}
 
-The age of the patient in days. 
+The age of the patient in days.
 
 \subsubsection{1.1 Model selection}
-The data seems to follow a counting process so we assume it is poisson distribution $Poi(\lambda)$. Using the non informative Jeffreys prior, we can derive that the posterior for the parameter $\lambda$ is Gamma distributed.
+The data seems to follow a counting process so we assume it is poisson distribution $Poi(\lambda)$. Using the non informative Jeffreys prior, $h(\lambda) = \lambda^{-1}$, we can derive that the posterior for the parameter $\lambda$ is Gamma distributed. $\lambda | x \sim Gamma(\alpha=\frac{1}{2} + \sum_{i = 1}^n x_i, \beta = n)$
 
 \subsubsection{1.2 Results}
 ```{r, echo=FALSE}
