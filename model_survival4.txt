@@ -1,5 +1,6 @@
 model
 {
+
 for(i in 1:n){
 
 
@@ -11,6 +12,7 @@ ones[i] ~ dbern(theta[i])
 lambda[i]<-delta*phi[i]
 Y[i] ~ dweib(alpha,lambda[i])
 }
+
 for(j in 1:7){
 beta[j] ~ dnorm(0,0.001)
 }

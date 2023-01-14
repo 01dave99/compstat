@@ -11,6 +11,10 @@ ones[i] ~ dbern(theta[i])
 lambda[i]<-delta*phi[i]
 Y[i] ~ dweib(alpha,lambda[i])
 }
+phii<-exp(inprod(beta[],surv[]))
+lambdaa<-delta*phii
+S ~ dweib(alpha, lambdaa)
+
 for(j in 1:6){
 beta[j] ~ dnorm(0,0.001)
 }

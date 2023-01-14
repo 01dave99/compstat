@@ -528,8 +528,8 @@ We see that, most patients have been diagnosed in the last to stages of the dise
 where $z$ is the covariate vector. As prior distribution for the regression parameters $\beta$ we will use normal distributions with $0$ mean and $\sigma^2=1000$. For the parameters $\alpha$ and $\delta$ we use $Gamma(0.001,0.001)$ prior distribution. Prior independence is assumed. MCMC methods and OpenBUGS help us to get inference about our parameters:
 ```{r, echo=FALSE}
 mydata[mydata=="."]<-NA
+mydata$V3[mydata$V3==1]<-NA
 mydata<-na.omit(mydata)
-mydata$V3[mydata$V3==1]<-0
 mydata$V3[mydata$V3==2]<-1
 
 n<-nrow(mydata)
@@ -600,7 +600,7 @@ fit3$summary[1:14,]
 d<-abs((t[cens==1]-fit3$mean$Y[cens==1])/fit3$sd$Y[cens==1])
 sum(d)
 ```
-We see that our model improved a little! We continue by neglecting the sex, presence of hepatomegaly, alkaline, triglicerides and platelets:
+We see that our model did not change much! We continue by neglecting the sex, presence of hepatomegaly, alkaline, triglicerides and platelets:
 
 ```{r, echo=FALSE}
 
@@ -610,11 +610,12 @@ t<-mydata$V2
 x<-mydata[,c(10,11,13,14,16,19,20)]
 x<-matrix(as.numeric(unlist(x)), ncol =7, nrow =n)
 
+
 data<-list("t", "x", "n", "cens")
 params<-c("alpha","beta","delta","Y")
 inits<-list(alpha=1,beta=integer(7),delta=1,Y=rep(1,n))
 
-fit4<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival4.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=FALSE, save.history=FALSE, DIC=TRUE)
+fit4<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival4.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=TRUE, save.history=FALSE, DIC=TRUE)
 fit4$summary[1:9,]
 ```
 ```{r}
@@ -629,10 +630,10 @@ cens<-mydata$V3
 t<-mydata$V2
 x<-mydata[,c(10,11,13,14,19,20)]
 x<-matrix(as.numeric(unlist(x)), ncol =6, nrow =n)
-
-data<-list("t", "x", "n", "cens")
-params<-c("alpha","beta","delta","Y")
-inits<-list(alpha=1,beta=integer(6),delta=1,Y=rep(1,n))
+surv<-c(0.5, 17.3, 2.9, 100.77, 14.6, 4)
+data<-list("t", "x", "n", "cens","surv")
+params<-c("alpha","beta","delta","Y","S")
+inits<-list(alpha=1,beta=integer(6),delta=1,Y=rep(1,n),S=1)
 
 fit5<-bugs(data=data,inits=list(inits),parameters.to.save=params,"model_survival5.txt", n.chains=1, n.iter=10000, n.burnin=5000, debug=FALSE, save.history=FALSE, DIC=TRUE)
 fit5$summary[1:8,]
@@ -643,8 +644,20 @@ d<-abs((t[cens==1]-fit5$mean$Y[cens==1])/fit5$sd$Y[cens==1])
 sum(d)
 ```
 
-Our model got worse! So we stop at the previous model and keep that as our survival model. Our remaining covariates are Edema, Bilirubin, Albumin, Urin copper, SGOT, prothrombin time and histologic stage. In the after-transplantation lifetime study, those covariates also play the most important role (except SGOT and urine copper)
+Our model still improved! We stop here and keep that as our survival model. Our remaining covariates are Edema, Bilirubin, Albumin, Urin copper, prothrombin time and histologic stage.
+We will give trace plots of the simulated parameters of the model, to show that the values come from the desired stationary distribution:
+```{r, echo=FALSE}
 
+chain4<-as.mcmc(fit5$sims.matrix[,c(1:8)])
+par(mfrow=c(3,3))
+traceplot(chain4,col="blue")
+```
+The traceplots look reasonable!
+In the after-transplantation lifetime study, those covariates also play the most important role (except urine copper). By sampling from the posterior predictive distribution for the survival time with covariates takes as the means from the liver transplantation study and our mean values in the covariates that are not appearing in the study, i.e taking the covariate vector: $x=[0.5, 17.3, 2.9, 100.77, 14.6, 4].$ we get as a accumulative distribution function:
+```{r}
+plot(ecdf(fit5$sims.matrix[,9]))
+```
+which suggests, that the survival probability without liver transplantion is less, when comparing to the liver transplantation paper.
 
 # Appendix
 ## Bernoulli/Beta
