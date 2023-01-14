@@ -21,14 +21,16 @@ mydata<-read.table("Report2_Dataset.txt", header=FALSE)
 
 \section{Statistical Analysis of Covariates}
 
-We will begin this report by making Bayesian inference on the covariates and estimating the posterior distributions for the parameters in the sample distributions. In the end we will make a survival analysis.
+Before doing our survival analysis we will perform Bayesian inference on the covariates. We will assume sampling distributions and calculate the posterior distributions for the respective parameters using MCMC methods. This will allow us to get a better understanding of the data set.
+
+After analysing the covariats we will apply MCMC methods to perform a Weibull survival analysis and see which parameters are crucial for the patients survival time. We will also compare our results with the after-transplantation lifetime study.
 
 \subsection{1. Age}
 
 The age of the patient in days. 
 
 \subsubsection{1.1 Model selection}
-The data seems to follow a counting process so we assume it is poisson distribution $Poi(\lambda)$. Using the non informative Jeffreys prior, we can derive that the posterior for the parameter $\lambda$ is Gamma distributed.
+The data seems to follow a counting process so we assume it is poisson distribution $Poi(\lambda)$. Using the non informative Jeffreys prior, $h(\lambda) = \lambda^{-1}$, we can derive that the posterior for the parameter $\lambda$ is Gamma distributed. $\lambda | x \sim Gamma(\alpha=\frac{1}{2} + \sum_{i = 1}^n x_i, \beta = n)$
 
 \subsubsection{1.2 Results}
 ```{r, echo=FALSE}
